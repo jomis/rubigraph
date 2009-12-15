@@ -153,7 +153,9 @@ module Rubigraph
 
   # initialize XML-RPC client
   def self.init(host='127.0.0.1', port='20738',ttl=1)
-    @server = XMLRPC::Client.new2("http://#{host}:#{port}/RPC2")
+    @host = host
+    @port = port
+    connect
     @mutex  = Mutex.new
     @pool   = Array.new
     @num    = -1 * (1 << 31) - 1 # XMLPRC i4's minimum
@@ -165,6 +167,10 @@ module Rubigraph
     end
     at_exit { flush! }
   end
+  
+  def self.connect
+    @server = XMLRPC::Client.new2("http://#{@host}:#{@port}/RPC2")
+  end
 
   # clear all vertex, edges
   def self.clear
@@ -174,8 +180,13 @@ module Rubigraph
 
   def self.flush!
     @mutex.synchronize {
-      @server.multicall(*@pool)
-      @pool.clear
+      begin
+        @server.multicall(*@pool)
+        @pool.clear
+      rescue Errno::ECONNRESET
+        connect
+        retry
+      end
     }
   end
 
