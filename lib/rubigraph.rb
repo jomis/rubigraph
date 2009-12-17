@@ -1,4 +1,5 @@
 require 'xmlrpc/client'
+require 'xmlrpc/server'
 require 'pp'
 require 'thread'
 
@@ -8,7 +9,7 @@ require 'thread'
 # Call Rubigraph.init at first.
 #
 module Rubigraph
-  VERSION = '0.2.0'
+  VERSION = '0.2.1'
 
   class Vertex
     attr_reader :id
@@ -16,6 +17,7 @@ module Rubigraph
     def initialize(id = Rubigraph.genid)
       @id = id
       Rubigraph.call('ubigraph.new_vertex_w_id', id)
+      set_attribute('visible','false')
     end
 
     def remove
@@ -73,6 +75,18 @@ module Rubigraph
       # TODO: should assert 10, 12, 18. 24
       set_attribute('fontsize', s)
     end
+    
+    def draw
+      set_attribute('visible','true')
+    end
+    
+    def hide
+      set_attribute('visible','false')
+    end
+    
+    def set_call_back(hostname='127.0.0.1',port='20700',method='test')
+      set_attribute('callback_left_doubleclick',"http://#{hostname}:#{port}/#{method}")
+    end
   end # Vertex
 
   # Edge between Vertexes
@@ -82,6 +96,7 @@ module Rubigraph
     def initialize(from, to, id = Rubigraph.genid)
       @id = id
       Rubigraph.call('ubigraph.new_edge_w_id', id, from.id, to.id)
+      set_attribute('visible','false')
     end
 
     def remove
@@ -146,6 +161,14 @@ module Rubigraph
 
     def showstrain=(s)
       set_attribute('showstrain', s)
+    end
+    
+    def draw
+      set_attribute('visible','true')
+    end
+    
+    def hide
+      set_attribute('visible','false')
     end
 
   end # Edge
